@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bewing/webhook-fanout/pkg/proxy"
 	"github.com/bewing/webhook-fanout/pkg/fanout"
+	"github.com/bewing/webhook-fanout/pkg/proxy"
 )
 
 func fanoutHandler(f fanout.Fanout) http.Handler {
@@ -25,7 +25,8 @@ func fanoutHandler(f fanout.Fanout) http.Handler {
 	return http.HandlerFunc(fn)
 }
 func main() {
-	f, _ := fanout.NewRandomFanout()
+	s := []string{"foo", "bar", "baz"}
+	f, _ := fanout.NewStaticFanout(s)
 	mux := http.NewServeMux()
 	fh := fanoutHandler(f)
 	mux.Handle("/", fh)
