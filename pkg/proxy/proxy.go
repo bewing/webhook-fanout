@@ -15,7 +15,9 @@ func Do(r *http.Request, receiver string, timeout time.Duration) (*http.Response
 	defer cancel()
 	url := fmt.Sprintf("http://%s%s", receiver, r.RequestURI)
 	newReq, _ := http.NewRequestWithContext(ctx, r.Method, url, r.Body)
-	newReq.Header = r.Header
+	for key, value := range r.Header {
+		newReq.Header[key] = value
+	}
 	if clientIP, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
 		if old, ok := r.Header["X-Forwarded-For"]; ok {
 			clientIP = strings.Join(old, ", ") + ", " + clientIP
