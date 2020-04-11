@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,6 +19,8 @@ func fanoutHandler(f fanout.Fanout) http.Handler {
 				_, err := proxy.Do(r, recv, 10*time.Second)
 				if err != nil {
 					fmt.Printf("%+v\n", err)
+				} else {
+					fmt.Printf("Relayed to %+v\n", recv)
 				}
 			}(receiver)
 		}
@@ -25,8 +28,15 @@ func fanoutHandler(f fanout.Fanout) http.Handler {
 	return http.HandlerFunc(fn)
 }
 func main() {
-	s := []string{"foo", "bar", "baz"}
-	f, _ := fanout.NewStaticFanout(s)
+	selector := flag.String("selector", "", "Label selector used to filter for pods")
+	namespace := flag.String("namespace", "", "Namespace to search for pods (default all)")
+	targetPort := flag.Int("targetPort", 80, "Listen port on Pods to fanout requests to")
+	flag.Parse()
+
+	f, err := fanout.NewPodFanout(*namespace, *selector, *targetPort)
+	if err != nil {
+		panic(err)
+	}
 	mux := http.NewServeMux()
 	fh := fanoutHandler(f)
 	mux.Handle("/", fh)
